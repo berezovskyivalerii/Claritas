@@ -16,11 +16,12 @@ class BaseChart(ABC):
 
 class LineChart(BaseChart):
     def draw(self, config: LineConfig):
-        self.ax.plot(config.x, config.y, marker="o", color="blue")
+        self.ax.plot(config.x, config.y, marker="o", color=config.color)
         self.ax.set_title(config.title)
         self.ax.set_xlabel(config.x_label)
         self.ax.set_ylabel(config.y_label)
-        self.ax.grid(True)
+        # self.ax.set_facecolor(config.color)
+        self.ax.grid(config.is_grid)
 
 class BarChart(BaseChart):
     def draw(self, config: BarConfig):
