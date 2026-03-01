@@ -48,6 +48,13 @@ class LineSettingsWidget(QWidget):
         
         return config
 
+    def load_ui(self, cfg: LineConfig):
+        self.title_input.setText(str(cfg.title) if cfg.title else "")
+        self.x_input.setText(str(cfg.x_label) if cfg.x_label else "")
+        self.y_input.setText(str(cfg.y_label) if cfg.y_label else "")
+        self.color_input.setCurrentText(str(cfg.color) if cfg.color else "Blue")
+        self.is_grid.setChecked(True if cfg.is_grid == 'true' else False)
+
     def apply_styles(self):
         self.setStyleSheet("""
             QLabel {

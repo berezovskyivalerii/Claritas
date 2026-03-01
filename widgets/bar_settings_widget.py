@@ -30,5 +30,10 @@ class BarSettingsWidget(QWidget):
             x_label=self.x_input.text(),
             y_label=self.y_input.text()
         )
-        
         return config
+
+    def load_ui(self, cfg: BarConfig):
+        self.title_input.setText(str(cfg.title) if cfg.title else "")
+        self.x_input.setText(str(cfg.x_label) if cfg.x_label else "")
+        self.y_input.setText(str(cfg.y_label) if cfg.y_label else "")
+        

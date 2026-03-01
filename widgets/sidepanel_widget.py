@@ -68,7 +68,35 @@ class SidePanel(QWidget):
         generated_config.chart_type = self.chart_type.lower()
 
         return generated_config
-    
+
+    def load(self, cfg):
+        self.selected_path = cfg.path
+        
+        self.combo_box.blockSignals(True)
+        
+        if cfg.chart_type == 'line':
+            self.chart_type = 'Line Chart'
+            self.raw_x = cfg.x
+            self.raw_y = cfg.y
+            self.combo_box.setCurrentIndex(0)
+            self.stacked_widget.setCurrentIndex(0)
+
+            self.line_settings.load_ui(cfg)
+            
+        elif cfg.chart_type == 'bar':
+            self.chart_type = 'Bar Chart'
+            self.raw_x = cfg.categories
+            self.raw_y = cfg.values
+            self.combo_box.setCurrentIndex(1)
+            self.stacked_widget.setCurrentIndex(1)
+
+            self.bar_settings.load_ui(cfg)
+
+        self.combo_box.blockSignals(False)
+
+        self.request_chart_draw.emit(self.chart_type, cfg)
+
+
     def handle_chart_selection(self, chart_type):
         self.chart_type = chart_type
 

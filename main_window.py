@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QFileDialog, QMainWindow, QTabWidget
 from PySide6.QtGui import QAction
 from widgets.chart_workspace_widget import ChartWorkspace 
 from json_gen.gen import save_config_to_json
+from json_gen.parse import parse_json_to_config
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -30,13 +31,16 @@ class MainWindow(QMainWindow):
         new_tab_action = QAction("New Chart Tab", self)
         new_tab_action.triggered.connect(lambda: self.add_new_tab("New Chart"))
 
+        open_action = QAction("Open file", self)
+        open_action.triggered.connect(self.open)
+
         save_action = QAction("Save As...", self)
         save_action.triggered.connect(self.save)
 
         export_action = QAction("Export to PNG", self)
         export_action.triggered.connect(self.export_png)
 
-        file_menu.addActions([new_tab_action, save_action, export_action])
+        file_menu.addActions([new_tab_action, open_action, save_action, export_action])
 
     def add_new_tab(self, title):
         # 1. Create a completely new, independent workspace
@@ -52,6 +56,20 @@ class MainWindow(QMainWindow):
         # Optional: Prevent closing the very last tab
         if self.tabs.count() > 1:
             self.tabs.removeTab(index)
+
+    def open(self):
+        file_filter = "JSON File (*.json);;All Files (*.*)"
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open File Configuration", ".", file_filter)
+
+        if file_path:
+            cfg = parse_json_to_config(file_path)
+            if cfg:
+                self.add_new_tab(cfg.title)
+                current_workspace = self.tabs.currentWidget() 
+                current_workspace.load(cfg)
+                print("Successfuly parsed")
+            else:
+                print("Failed to parse")
 
     def save(self):
         # Dynamically fetch the workspace the user is currently looking at

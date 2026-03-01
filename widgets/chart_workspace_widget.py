@@ -28,3 +28,6 @@ class ChartWorkspace(QSplitter):
 
     def export_current_chart(self):
         self.live_chart_widget.export_to_png()
+
+    def load(self, cfg):
+        self.sidepanel_widget.load(cfg)
