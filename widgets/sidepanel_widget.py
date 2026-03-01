@@ -15,6 +15,7 @@ class SidePanel(QWidget):
         self.raw_x = []
         self.raw_y = []
         self.chart_type = "Line Chart"
+        self.selected_path = ""
 
         # --- Create Main Layout --- 
         self.main_layout = QVBoxLayout()
@@ -53,15 +54,25 @@ class SidePanel(QWidget):
 
         # --- Styles ---
         self.apply_styles()
+    
+    def get_config(self):
+        if not self.selected_path:
+            print("Error: no data to save.")
+            return None
 
+        active_widget = self.stacked_widget.currentWidget()
+        generated_config = active_widget.create_config(self.selected_path, self.raw_x, self.raw_y)
+
+        generated_config.chart_type = self.chart_type.lower()
+
+        return generated_config
     
     def handle_chart_selection(self, chart_type):
         self.chart_type = chart_type
 
         active_widget = self.stacked_widget.currentWidget()
-        genereted_config = active_widget.create_config(self.raw_x, self.raw_y)
-        self.request_chart_draw.emit(self.chart_type, genereted_config)
-
+        generated_config = active_widget.create_config(self.selected_path, self.raw_x, self.raw_y)
+        self.request_chart_draw.emit(self.chart_type, generated_config)
 
     # Read inputs
     def get_user_data(self):
@@ -70,7 +81,7 @@ class SidePanel(QWidget):
 
         active_widget = self.stacked_widget.currentWidget()
 
-        genereted_config = active_widget.create_config(self.raw_x, self.raw_y)
+        genereted_config = active_widget.create_config(self.selected_path, self.raw_x, self.raw_y)
 
         self.request_chart_draw.emit(self.chart_type, genereted_config)
 
@@ -78,9 +89,9 @@ class SidePanel(QWidget):
     def select_file(self):
         dialog_filter = "CSV filter (*.csv);;All files (*.*)"
 
-        selected_path, _ = QFileDialog.getOpenFileName(None, "Select Data File", "", dialog_filter)
-        if selected_path: 
-            self.parse_selected_file(selected_path)
+        self.selected_path, _ = QFileDialog.getOpenFileName(None, "Select Data File", "", dialog_filter)
+        if self.selected_path: 
+            self.parse_selected_file(self.selected_path)
 
     # Parse file to config
     def parse_selected_file(self, path):

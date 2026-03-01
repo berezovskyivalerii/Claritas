@@ -21,8 +21,9 @@ class BarSettingsWidget(QWidget):
         layout.addWidget(self.x_input)
         layout.addWidget(self.y_input)
 
-    def create_config(self, raw_x, raw_y) -> BarConfig:
+    def create_config(self, path, raw_x, raw_y) -> BarConfig:
         config = BarConfig(
+            path=path,
             title=self.title_input.text(),
             categories=raw_x,
             values=raw_y,

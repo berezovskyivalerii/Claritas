@@ -37,3 +37,6 @@ class LiveChartWidget(QWidget):
                 print(f"Export Successful: {file_path}")
             except Exception as e:
                 print(f"Failed to export chart: {e}")
+
+    def save(self, cfg_json):
+        print("Save json")

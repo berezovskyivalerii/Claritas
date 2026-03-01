@@ -34,8 +34,9 @@ class LineSettingsWidget(QWidget):
 
         self.apply_styles()
 
-    def create_config(self, raw_x, raw_y) -> LineConfig:
+    def create_config(self, path, raw_x, raw_y) -> LineConfig:
         config = LineConfig(
+            path=path,
             title=self.title_input.text(),
             x_data=raw_x,
             y_data=raw_y,
