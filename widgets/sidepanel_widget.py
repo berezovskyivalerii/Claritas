@@ -22,6 +22,7 @@ class SidePanel(QWidget):
         self.main_layout.setAlignment(Qt.AlignTop)
 
         self.upload_button = QPushButton("Upload Data File")
+        self.upload_button.setObjectName("uploadButton")
         self.upload_button.clicked.connect(self.select_file)
 
         # Create the ComboBox
@@ -42,6 +43,7 @@ class SidePanel(QWidget):
         self.combo_box.currentTextChanged.connect(self.handle_chart_selection)
 
         self.submit_button = QPushButton("Submit")
+        self.submit_button.setObjectName("submitButton")
         self.submit_button.clicked.connect(self.get_user_data)
 
         # Add everything to the main layout
@@ -109,24 +111,42 @@ class SidePanel(QWidget):
 
             QComboBox {
                 color: black;
+                background-color: white;
             }
             
-            QPushButton {
-                background-color: #FFFFFF;
-                color: #333333;
-                border: 1px solid #CCCCCC;
-                border-radius: 4px;
-                padding: 6px 12px;
+            #uploadButton {
+                padding: 5px 0px;
+                border-radius: 5px;
+                background-color: #4681f4;
+                color: #FFFFFF;
+                border: 1px solid #3A7CBD;
+                font: bold;
             }
             
-            QPushButton:hover {
-                background-color: #E6E9ED;
+            #uploadButton:hover {
+                background-color: #3A7CBD;
             }
             
-            QPushButton:pressed {
-                background-color: #D6D9DF;
+            #uploadButton:pressed {
+                background-color: #2C5F96;
             }
             
+            #submitButton {
+                padding: 10px 0px;
+                background-color: #33b249;
+                color: #FFFFFF;
+                border: 1px solid #27AE60;
+                font-weight: bold;
+                font-size: 16px;
+            }
+            
+            #submitButton:hover {
+                background-color: #27AE60;
+            }
+            
+            #submitButton:pressed {
+                background-color: #1E8449;
+            }
             QLineEdit {
                 background-color: #FFFFFF;
                 color: #333333;
