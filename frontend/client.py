@@ -32,9 +32,17 @@ class GrpcDataStreamer(QThread):
                 if chunk.error_message:
                     self.error_occurred.emit(chunk.error_message)
                     break
-                
-                # Emit the received chunk to the GUI thread
-                self.chunk_received.emit(list(chunk.x_values), list(chunk.y_values))
+            if chunk.x_is_string:
+                x_data = list(chunk.x_string_values)
+            else:
+                x_data = list(chunk.x_num_values)
+
+            if chunk.y_is_string:
+                y_data = list(chunk.y_string_values)
+            else:
+                y_data = list(chunk.y_num_values)
+
+            self.chunk_received.emit(x_data, y_data)
                 
         except grpc.RpcError as e:
             self.error_occurred.emit(f"gRPC Error: {e.details()}")

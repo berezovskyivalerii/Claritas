@@ -80,28 +80,45 @@ func (s *server) StreamData(in *pb.ParseRequest, stream pb.ClaritasEngine_Stream
 		return fmt.Errorf("requested headers were not found")
 	}
 
+	xIsStr := false
+	yIsStr := false
+
+	// Peek at the first row to determine data types
+	peekRow, err := reader.Read()
+	if err == nil {
+		if _, parseErr := strconv.ParseFloat(peekRow[xIndex], 64); parseErr != nil {
+			xIsStr = true
+		}
+		if _, parseErr := strconv.ParseFloat(peekRow[yIndex], 64); parseErr != nil {
+			yIsStr = true
+		}
+		
+		file.Seek(0, 0)
+		reader = csv.NewReader(file)
+		reader.Read() // skip headers again
+	}
+
 	// 1. Adaptive Window Calculation
 	fileStat, err := file.Stat()
 	if err != nil {
 		return fmt.Errorf("failed to get file stats: %w", err)
 	}
 
-	// Estimate the number of rows (assuming ~30 bytes per row for a typical CSV with 2 floats)
 	estimatedRows := fileStat.Size() / 30
-
-	// We want to send approximately 4000 points (2000 windows) to keep UI responsive
 	windowSize := int(estimatedRows / 2000)
 	
-	// Disable decimation completely for small files
-	if windowSize < 1 {
+	// Disable decimation completely for small files OR if any column is a string
+	if windowSize < 1 || xIsStr || yIsStr {
 		windowSize = 1 
 	}
 	
 	log.Printf("File size: %d bytes. Estimated rows: %d. Calculated window size: %d\n", fileStat.Size(), estimatedRows, windowSize)
 
 	chunkCapacity := 10000 
-	xChunk := make([]float64, 0, chunkCapacity)
-	yChunk := make([]float64, 0, chunkCapacity)
+	xNumChunk := make([]float64, 0, chunkCapacity)
+	yNumChunk := make([]float64, 0, chunkCapacity)
+	xStrChunk := make([]string, 0, chunkCapacity)
+	yStrChunk := make([]string, 0, chunkCapacity)
 
 	var eofReached bool
 
@@ -122,58 +139,95 @@ func (s *server) StreamData(in *pb.ParseRequest, stream pb.ClaritasEngine_Stream
 				continue 
 			}
 
-			xVal, errX := strconv.ParseFloat(record[xIndex], 64)
-			yVal, errY := strconv.ParseFloat(record[yIndex], 64)
+			var xNum, yNum float64
+			var errX, errY error
+
+			// Parse only if the column is numeric
+			if !xIsStr {
+				xNum, errX = strconv.ParseFloat(record[xIndex], 64)
+			}
+			if !yIsStr {
+				yNum, errY = strconv.ParseFloat(record[yIndex], 64)
+			}
 
 			if errX == nil && errY == nil {
-				if isFirstInWindow {
-					minVal = yVal
-					maxVal = yVal
-					minX = xVal
-					maxX = xVal
-					isFirstInWindow = false
-				} else {
-					if yVal < minVal {
-						minVal = yVal
-						minX = xVal
+				if windowSize == 1 {
+					// Direct append for strings or small files
+					if xIsStr {
+						xStrChunk = append(xStrChunk, record[xIndex])
+					} else {
+						xNumChunk = append(xNumChunk, xNum)
 					}
-					if yVal > maxVal {
-						maxVal = yVal
-						maxX = xVal
+					
+					if yIsStr {
+						yStrChunk = append(yStrChunk, record[yIndex])
+					} else {
+						yNumChunk = append(yNumChunk, yNum)
+					}
+				} else {
+					// Min-Max Decimation for numeric data
+					if isFirstInWindow {
+						minVal = yNum
+						maxVal = yNum
+						minX = xNum
+						maxX = xNum
+						isFirstInWindow = false
+					} else {
+						if yNum < minVal {
+							minVal = yNum
+							minX = xNum
+						}
+						if yNum > maxVal {
+							maxVal = yNum
+							maxX = xNum
+						}
 					}
 				}
 				validPointsInWindow++
 			}
 		}
 
-		if validPointsInWindow > 0 {
+		// Append decimated points after the window loop finishes
+		if windowSize > 1 && validPointsInWindow > 0 {
 			if minX < maxX {
-				xChunk = append(xChunk, minX, maxX)
-				yChunk = append(yChunk, minVal, maxVal)
+				xNumChunk = append(xNumChunk, minX, maxX)
+				yNumChunk = append(yNumChunk, minVal, maxVal)
 			} else if minX > maxX {
-				xChunk = append(xChunk, maxX, minX)
-				yChunk = append(yChunk, maxVal, minVal)
+				xNumChunk = append(xNumChunk, maxX, minX)
+				yNumChunk = append(yNumChunk, maxVal, minVal)
 			} else {
-				// Perfect for windowSize == 1, appends only the exact point
-				xChunk = append(xChunk, minX)
-				yChunk = append(yChunk, minVal)
+				xNumChunk = append(xNumChunk, minX)
+				yNumChunk = append(yNumChunk, minVal)
 			}
 		}
 
+		// Check current length to decide if we need to send the chunk
+		currentLen := len(xNumChunk)
+		if xIsStr {
+			currentLen = len(xStrChunk)
+		}
+
 		// 3. Send chunk if capacity reached or file ended
-		if len(xChunk) >= chunkCapacity-2 || eofReached {
-			if len(xChunk) > 0 {
+		if currentLen >= chunkCapacity-2 || eofReached {
+			if currentLen > 0 {
 				sendErr := stream.Send(&pb.DataChunk{
-					XValues: xChunk,
-					YValues: yChunk,
+					XNumValues: xNumChunk,
+					YNumValues: yNumChunk,
+					XStringValues: xStrChunk,
+					YStringValues: yStrChunk,
+					XIsString:  xIsStr,
+					YIsString:  yIsStr,
 				})
+				
 				if sendErr != nil {
 					return fmt.Errorf("stream send error: %w", sendErr)
 				}
 				
-				// Reset slice length but keep capacity
-				xChunk = xChunk[:0]
-				yChunk = yChunk[:0]
+				// Reset slices but keep capacity
+				xNumChunk = xNumChunk[:0]
+				yNumChunk = yNumChunk[:0]
+				xStrChunk = xStrChunk[:0]
+				yStrChunk = yStrChunk[:0]
 			}
 		}
 	}

@@ -267,9 +267,13 @@ func (x *ParseRequest) GetChunkSize() int32 {
 
 type DataChunk struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	XValues       []float64              `protobuf:"fixed64,1,rep,packed,name=x_values,json=xValues,proto3" json:"x_values,omitempty"`
-	YValues       []float64              `protobuf:"fixed64,2,rep,packed,name=y_values,json=yValues,proto3" json:"y_values,omitempty"`
-	ErrorMessage  string                 `protobuf:"bytes,3,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	XNumValues    []float64              `protobuf:"fixed64,1,rep,packed,name=x_num_values,json=xNumValues,proto3" json:"x_num_values,omitempty"`
+	YNumValues    []float64              `protobuf:"fixed64,2,rep,packed,name=y_num_values,json=yNumValues,proto3" json:"y_num_values,omitempty"`
+	XStringValues []string               `protobuf:"bytes,3,rep,name=x_string_values,json=xStringValues,proto3" json:"x_string_values,omitempty"`
+	YStringValues []string               `protobuf:"bytes,4,rep,name=y_string_values,json=yStringValues,proto3" json:"y_string_values,omitempty"`
+	XIsString     bool                   `protobuf:"varint,5,opt,name=x_is_string,json=xIsString,proto3" json:"x_is_string,omitempty"`
+	YIsString     bool                   `protobuf:"varint,6,opt,name=y_is_string,json=yIsString,proto3" json:"y_is_string,omitempty"`
+	ErrorMessage  string                 `protobuf:"bytes,7,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -304,18 +308,46 @@ func (*DataChunk) Descriptor() ([]byte, []int) {
 	return file_claritas_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *DataChunk) GetXValues() []float64 {
+func (x *DataChunk) GetXNumValues() []float64 {
 	if x != nil {
-		return x.XValues
+		return x.XNumValues
 	}
 	return nil
 }
 
-func (x *DataChunk) GetYValues() []float64 {
+func (x *DataChunk) GetYNumValues() []float64 {
 	if x != nil {
-		return x.YValues
+		return x.YNumValues
 	}
 	return nil
+}
+
+func (x *DataChunk) GetXStringValues() []string {
+	if x != nil {
+		return x.XStringValues
+	}
+	return nil
+}
+
+func (x *DataChunk) GetYStringValues() []string {
+	if x != nil {
+		return x.YStringValues
+	}
+	return nil
+}
+
+func (x *DataChunk) GetXIsString() bool {
+	if x != nil {
+		return x.XIsString
+	}
+	return false
+}
+
+func (x *DataChunk) GetYIsString() bool {
+	if x != nil {
+		return x.YIsString
+	}
+	return false
 }
 
 func (x *DataChunk) GetErrorMessage() string {
@@ -343,11 +375,17 @@ const file_claritas_proto_rawDesc = "" +
 	"\bx_column\x18\x02 \x01(\tR\axColumn\x12\x19\n" +
 	"\by_column\x18\x03 \x01(\tR\ayColumn\x12\x1d\n" +
 	"\n" +
-	"chunk_size\x18\x04 \x01(\x05R\tchunkSize\"f\n" +
-	"\tDataChunk\x12\x19\n" +
-	"\bx_values\x18\x01 \x03(\x01R\axValues\x12\x19\n" +
-	"\by_values\x18\x02 \x03(\x01R\ayValues\x12#\n" +
-	"\rerror_message\x18\x03 \x01(\tR\ferrorMessage2\xbe\x01\n" +
+	"chunk_size\x18\x04 \x01(\x05R\tchunkSize\"\x84\x02\n" +
+	"\tDataChunk\x12 \n" +
+	"\fx_num_values\x18\x01 \x03(\x01R\n" +
+	"xNumValues\x12 \n" +
+	"\fy_num_values\x18\x02 \x03(\x01R\n" +
+	"yNumValues\x12&\n" +
+	"\x0fx_string_values\x18\x03 \x03(\tR\rxStringValues\x12&\n" +
+	"\x0fy_string_values\x18\x04 \x03(\tR\ryStringValues\x12\x1e\n" +
+	"\vx_is_string\x18\x05 \x01(\bR\txIsString\x12\x1e\n" +
+	"\vy_is_string\x18\x06 \x01(\bR\tyIsString\x12#\n" +
+	"\rerror_message\x18\a \x01(\tR\ferrorMessage2\xbe\x01\n" +
 	"\x0eClaritasEngine\x12/\n" +
 	"\x04Ping\x12\x0f.claritas.Empty\x1a\x16.claritas.HealthStatus\x12>\n" +
 	"\n" +

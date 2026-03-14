@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x63laritas.proto\x12\x08\x63laritas\"\x07\n\x05\x45mpty\"\x1e\n\x0cHealthStatus\x12\x0e\n\x06status\x18\x01 \x01(\t\" \n\x0b\x46ileRequest\x12\x11\n\tfile_path\x18\x01 \x01(\t\"9\n\x0fHeadersResponse\x12\x0f\n\x07\x63olumns\x18\x01 \x03(\t\x12\x15\n\rerror_message\x18\x02 \x01(\t\"Y\n\x0cParseRequest\x12\x11\n\tfile_path\x18\x01 \x01(\t\x12\x10\n\x08x_column\x18\x02 \x01(\t\x12\x10\n\x08y_column\x18\x03 \x01(\t\x12\x12\n\nchunk_size\x18\x04 \x01(\x05\"F\n\tDataChunk\x12\x10\n\x08x_values\x18\x01 \x03(\x01\x12\x10\n\x08y_values\x18\x02 \x03(\x01\x12\x15\n\rerror_message\x18\x03 \x01(\t2\xbe\x01\n\x0e\x43laritasEngine\x12/\n\x04Ping\x12\x0f.claritas.Empty\x1a\x16.claritas.HealthStatus\x12>\n\nGetHeaders\x12\x15.claritas.FileRequest\x1a\x19.claritas.HeadersResponse\x12;\n\nStreamData\x12\x16.claritas.ParseRequest\x1a\x13.claritas.DataChunk0\x01\x42\x07Z\x05./apib\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x63laritas.proto\x12\x08\x63laritas\"\x07\n\x05\x45mpty\"\x1e\n\x0cHealthStatus\x12\x0e\n\x06status\x18\x01 \x01(\t\" \n\x0b\x46ileRequest\x12\x11\n\tfile_path\x18\x01 \x01(\t\"9\n\x0fHeadersResponse\x12\x0f\n\x07\x63olumns\x18\x01 \x03(\t\x12\x15\n\rerror_message\x18\x02 \x01(\t\"Y\n\x0cParseRequest\x12\x11\n\tfile_path\x18\x01 \x01(\t\x12\x10\n\x08x_column\x18\x02 \x01(\t\x12\x10\n\x08y_column\x18\x03 \x01(\t\x12\x12\n\nchunk_size\x18\x04 \x01(\x05\"\xaa\x01\n\tDataChunk\x12\x14\n\x0cx_num_values\x18\x01 \x03(\x01\x12\x14\n\x0cy_num_values\x18\x02 \x03(\x01\x12\x17\n\x0fx_string_values\x18\x03 \x03(\t\x12\x17\n\x0fy_string_values\x18\x04 \x03(\t\x12\x13\n\x0bx_is_string\x18\x05 \x01(\x08\x12\x13\n\x0by_is_string\x18\x06 \x01(\x08\x12\x15\n\rerror_message\x18\x07 \x01(\t2\xbe\x01\n\x0e\x43laritasEngine\x12/\n\x04Ping\x12\x0f.claritas.Empty\x1a\x16.claritas.HealthStatus\x12>\n\nGetHeaders\x12\x15.claritas.FileRequest\x1a\x19.claritas.HeadersResponse\x12;\n\nStreamData\x12\x16.claritas.ParseRequest\x1a\x13.claritas.DataChunk0\x01\x42\x07Z\x05./apib\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -42,8 +42,8 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_HEADERSRESPONSE']._serialized_end=160
   _globals['_PARSEREQUEST']._serialized_start=162
   _globals['_PARSEREQUEST']._serialized_end=251
-  _globals['_DATACHUNK']._serialized_start=253
-  _globals['_DATACHUNK']._serialized_end=323
-  _globals['_CLARITASENGINE']._serialized_start=326
-  _globals['_CLARITASENGINE']._serialized_end=516
+  _globals['_DATACHUNK']._serialized_start=254
+  _globals['_DATACHUNK']._serialized_end=424
+  _globals['_CLARITASENGINE']._serialized_start=427
+  _globals['_CLARITASENGINE']._serialized_end=617
 # @@protoc_insertion_point(module_scope)

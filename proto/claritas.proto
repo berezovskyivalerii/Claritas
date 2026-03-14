@@ -27,9 +27,16 @@ message ParseRequest {
 }
 
 message DataChunk {
-    repeated double x_values = 1;
-    repeated double y_values = 2;
-    string error_message = 3;
+    repeated double x_num_values = 1;
+    repeated double y_num_values = 2;
+
+    repeated string x_string_values = 3;
+    repeated string y_string_values = 4; 
+  
+    bool x_is_string = 5;
+    bool y_is_string = 6;
+
+    string error_message = 7;
 }
 
 service ClaritasEngine {
