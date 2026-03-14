@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package claritas;
+
+option go_package = "./api";
+
+message Empty {}
+
+message HealthStatus {
+    string status = 1; 
+}
+
+message FileRequest {
+    string file_path = 1;
+}
+
+message HeadersResponse {
+    repeated string columns = 1;
+    string error_message = 2;
+}
+
+message ParseRequest {
+    string file_path = 1;
+    string x_column = 2;
+    string y_column = 3;
+    int32 chunk_size = 4; 
+}
+
+message DataChunk {
+    repeated double x_values = 1;
+    repeated double y_values = 2;
+    string error_message = 3;
+}
+
+service ClaritasEngine {
+    // Checks if the Go backend is alive
+    rpc Ping (Empty) returns (HealthStatus);
+
+    // Reads the first line of the CSV and returns column names
+    rpc GetHeaders (FileRequest) returns (HeadersResponse);
+
+    // Reads the CSV and streams parsed data points back to the client
+    rpc StreamData (ParseRequest) returns (stream DataChunk);
+}

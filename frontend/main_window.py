@@ -7,7 +7,7 @@ from json_gen.parse import parse_json_to_config
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.resize(800, 600)
+        self.resize(1400, 850)
         
         self.build_menu()
         
