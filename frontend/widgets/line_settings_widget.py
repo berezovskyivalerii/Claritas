@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QLineEdit, QWidget, 
+from PySide6.QtWidgets import (QLineEdit, QComboBox, QCheckBox, QWidget, 
                                QVBoxLayout, QHBoxLayout, QLabel, QSpinBox, QDoubleSpinBox,
-                               QGroupBox, QGridLayout)
+                               QGroupBox, QGridLayout, QScrollArea)
 from PySide6.QtCore import Qt, Signal
 from config.config import LineConfig
 
@@ -9,7 +9,19 @@ class LineSettingsWidget(QWidget):
     
     def __init__(self):
         super().__init__()
-        layout = QVBoxLayout(self)
+        # Main layout for the widget itself
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0) # Remove margins around scroll area
+        
+        # --- Create Scroll Area ---
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QScrollArea.NoFrame) # Clean look
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        
+        # --- Create Container Widget for Scroll Area ---
+        container_widget = QWidget()
+        layout = QVBoxLayout(container_widget)
         layout.setAlignment(Qt.AlignTop)
         layout.setSpacing(10)
         
@@ -23,11 +35,13 @@ class LineSettingsWidget(QWidget):
         self.y_input.setPlaceholderText("Y Axis Label...")
 
         self.color_input = QComboBox()
-        self.color_input.addItems(['Red', 'Blue', 'Green', 'Black', 'Yellow'])
+        self.color_input.addItems(['#2563EB', '#EF4444', '#10B981', '#F59E0B', '#111827']) # Updated defaults
+        # Optional: You can keep color names if your backend handles them, 
+        # but HEX codes matching our Ocean Blue theme look more professional.
 
         self.is_grid = QCheckBox("Grid")
 
-        # --- NEW: Line Appearance ---
+        # --- Line Appearance ---
         self.line_style = QComboBox()
         self.line_style.addItems(['solid', 'dashed', 'dotted', 'dashdot'])
 
@@ -36,7 +50,7 @@ class LineSettingsWidget(QWidget):
         self.line_width.setValue(1.5)
         self.line_width.setSingleStep(0.5)
 
-        # --- NEW: Markers ---
+        # --- Markers ---
         self.marker_style = QComboBox()
         self.marker_style.addItems(['None', 'o', 's', '^', 'D'])
 
@@ -44,7 +58,7 @@ class LineSettingsWidget(QWidget):
         self.marker_size.setRange(1, 20)
         self.marker_size.setValue(5)
 
-        # --- NEW: Axis Limits (Text inputs to allow empty state for auto-scale) ---
+        # --- Axis Limits ---
         self.x_min = QLineEdit()
         self.x_min.setPlaceholderText("X Min")
         self.x_max = QLineEdit()
@@ -54,7 +68,7 @@ class LineSettingsWidget(QWidget):
         self.y_max = QLineEdit()
         self.y_max.setPlaceholderText("Y Max")
 
-        # --- NEW: Log Scale & Tick Rotation ---
+        # --- Log Scale & Tick Rotation ---
         self.log_x = QCheckBox("Log X")
         self.log_y = QCheckBox("Log Y")
 
@@ -62,7 +76,7 @@ class LineSettingsWidget(QWidget):
         self.tick_rotation.setRange(0, 360)
         self.tick_rotation.setValue(0)
 
-        # --- NEW: Legend & Fill ---
+        # --- Legend & Fill ---
         self.show_legend = QCheckBox("Legend")
         self.legend_loc = QComboBox()
         self.legend_loc.addItems(['best', 'upper right', 'upper left', 'lower left', 'lower right'])
@@ -73,10 +87,10 @@ class LineSettingsWidget(QWidget):
         self.alpha.setValue(1.0)
         self.alpha.setSingleStep(0.1)
 
-        # --- NEW: Fonts ---
+        # --- Fonts ---
         self.title_font_size = QSpinBox()
         self.title_font_size.setRange(8, 32)
-        self.title_font_size.setValue(12)
+        self.title_font_size.setValue(14)
 
         self.axis_font_size = QSpinBox()
         self.axis_font_size.setRange(8, 32)
@@ -131,12 +145,15 @@ class LineSettingsWidget(QWidget):
         axes_layout.addWidget(self.y_min, 1, 0)
         axes_layout.addWidget(self.y_max, 1, 1)
         
+        # Group Checkboxes and small inputs together tightly
         axes_layout.addWidget(self.log_x, 2, 0)
         axes_layout.addWidget(self.log_y, 2, 1)
+        axes_layout.addWidget(self.is_grid, 3, 0)
         
-        axes_layout.addWidget(QLabel("Tick Rotation:"), 3, 0)
-        axes_layout.addWidget(self.tick_rotation, 3, 1)
-        axes_layout.addWidget(self.is_grid, 4, 0, 1, 2)
+        rotation_layout = QHBoxLayout()
+        rotation_layout.addWidget(QLabel("Rotation:"))
+        rotation_layout.addWidget(self.tick_rotation)
+        axes_layout.addLayout(rotation_layout, 3, 1)
 
         # --- Create Group: Extras ---
         extras_group = QGroupBox("Legend & Fill")
@@ -147,14 +164,17 @@ class LineSettingsWidget(QWidget):
         extras_layout.addWidget(self.legend_loc, 0, 2)
         extras_layout.addWidget(self.fill_under, 1, 0, 1, 3)
 
-        # --- Add all groups to the main widget layout ---
+        # --- Add all groups to the container layout ---
         layout.addWidget(general_group)
         layout.addWidget(appearance_group)
         layout.addWidget(axes_group)
         layout.addWidget(extras_group)
         
-        # Add a stretch at the bottom so groups do not spread out
-        layout.addStretch()
+        # Set the container widget to the scroll area
+        scroll_area.setWidget(container_widget)
+        
+        # Add scroll area to the main layout
+        main_layout.addWidget(scroll_area)
 
         self.apply_styles()
 
@@ -195,7 +215,12 @@ class LineSettingsWidget(QWidget):
         self.title_input.setText(str(cfg.title) if cfg.title else "")
         self.x_input.setText(str(cfg.x_label) if cfg.x_label else "")
         self.y_input.setText(str(cfg.y_label) if cfg.y_label else "")
-        self.color_input.setCurrentText(str(cfg.color) if cfg.color else "Blue")
+        
+        # Ensure the color combo box has the value before setting it
+        color_text = str(cfg.color) if cfg.color else "#2563EB"
+        if self.color_input.findText(color_text) == -1:
+            self.color_input.addItem(color_text)
+        self.color_input.setCurrentText(color_text)
         
         # Boolean handling for JSON consistency
         self.is_grid.setChecked(bool(getattr(cfg, 'is_grid', False)))
@@ -220,24 +245,26 @@ class LineSettingsWidget(QWidget):
         self.fill_under.setChecked(bool(getattr(cfg, 'fill_under', False)))
         self.alpha.setValue(float(getattr(cfg, 'alpha', 1.0)))
         
-        self.title_font_size.setValue(int(getattr(cfg, 'title_font_size', 12)))
+        self.title_font_size.setValue(int(getattr(cfg, 'title_font_size', 14)))
         self.axis_font_size.setValue(int(getattr(cfg, 'axis_font_size', 10)))
 
     def apply_styles(self):
+        # Updated to match the Ocean Blue / Postman Light theme
         self.setStyleSheet("""
             /* Base Label Style */
             QLabel {
-                color: #444444;
+                color: #6B6B6B;
                 font-weight: bold;
+                font-size: 11px;
             }
 
             /* Modern GroupBox Styling */
             QGroupBox {
-                border: 1px solid #D0D4D9;
+                border: 1px solid #EAEAEA;
                 border-radius: 6px;
-                margin-top: 14px; 
-                padding-top: 12px;
-                background-color: #FAFBFC;
+                margin-top: 10px; 
+                padding-top: 15px;
+                background-color: #FFFFFF;
             }
 
             QGroupBox::title {
@@ -245,50 +272,65 @@ class LineSettingsWidget(QWidget):
                 subcontrol-position: top left;
                 left: 10px;
                 padding: 0 5px;
-                color: #2C3E50;
+                color: #212121;
                 font-weight: bold;
-                font-size: 13px;
+                font-size: 12px;
             }
 
             /* Checkbox Styling */
             QCheckBox {
-                color: #333333;
-                font-size: 13px;
+                color: #212121;
+                font-size: 12px;
                 spacing: 6px;
             }
 
             QCheckBox::indicator {
-                width: 16px;
-                height: 16px;
-                border: 1px solid #A0AAB5;
+                width: 14px;
+                height: 14px;
+                border: 1px solid #CCCCCC;
                 background-color: #FFFFFF;
-                border-radius: 4px;
+                border-radius: 3px;
             }
 
             QCheckBox::indicator:checked {
-                background-color: #4A90E2;
-                border: 1px solid #4A90E2;
-                image: url(black_check_mark.png); 
+                background-color: #2563EB;
+                border: 1px solid #2563EB;
+                /* Note: Ensure black_check_mark.png exists, or use a white one for better contrast against blue */
             }
 
             /* Uniform Inputs Styling */
             QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox {
                 background-color: #FFFFFF;
-                color: #333333;
-                border: 1px solid #BDC3C7;
+                color: #212121;
+                border: 1px solid #EAEAEA;
                 border-radius: 4px;
                 padding: 4px 6px;
-                min-height: 20px;
+                min-height: 22px;
+                font-size: 12px;
             }
 
             QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus {
-                border: 1px solid #4A90E2;
-                background-color: #F0F8FF;
+                border: 1px solid #3B82F6;
+                background-color: #F8FAFC;
             }
             
-            /* Specific fix for ComboBox drop-down */
-            QComboBox::drop-down {
+            /* ScrollBar Styling to look clean */
+            QScrollBar:vertical {
                 border: none;
-                width: 20px;
+                background: #FAFAFA;
+                width: 8px;
+                border-radius: 4px;
+            }
+            QScrollBar::handle:vertical {
+                background: #CCCCCC;
+                min-height: 20px;
+                border-radius: 4px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #A0A0A0;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                border: none;
+                background: none;
             }
         """)

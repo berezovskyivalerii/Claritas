@@ -1,8 +1,11 @@
 from PySide6.QtWidgets import QFileDialog, QMainWindow, QTabWidget
 from PySide6.QtGui import QAction
+from widgets import greeting_widget
 from widgets.chart_workspace_widget import ChartWorkspace 
 from json_gen.gen import save_config_to_json
 from json_gen.parse import parse_json_to_config
+from widgets.greeting_widget import GreetingWindow
+from widgets.database_workspace_widget import DatabaseWorkspace
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -44,18 +47,43 @@ class MainWindow(QMainWindow):
 
     def add_new_tab(self, title):
         # 1. Create a completely new, independent workspace
-        new_workspace = ChartWorkspace()
+        greeting_window = GreetingWindow()
         
         # 2. Add it to the QTabWidget
-        self.tabs.addTab(new_workspace, title)
-        
-        # 3. Automatically switch focus to the newly created tab
-        self.tabs.setCurrentWidget(new_workspace)
+        index = self.tabs.addTab(greeting_window, title)
+        self.tabs.setCurrentIndex(index)
+
+        greeting_window.fs_chosen.connect(lambda: self.replace_tab(greeting_window, "fs"))
+        greeting_window.db_chosen.connect(lambda: self.replace_tab(greeting_window, "db"))
 
     def close_tab(self, index):
-        # Optional: Prevent closing the very last tab
-        if self.tabs.count() > 1:
+        if self.tabs.count() > 2:
+            widget_to_remove = self.tabs.widget(index)
             self.tabs.removeTab(index)
+            widget_to_remove.deleteLater()
+
+    def replace_tab(self, old_widget, choice):
+        index = self.tabs.indexOf(old_widget)
+        if index == -1:
+            return
+
+        # Instantiate the correct workspace
+        if choice == "fs":
+            new_widget = ChartWorkspace()
+            new_title = "Local CSV Chart"
+        elif choice == "db":
+            new_widget = DatabaseWorkspace() # Assuming you created this class
+            new_title = "Database Chart"
+        else:
+            return
+
+        # Replace the widget in the tab system
+        self.tabs.removeTab(index)
+        self.tabs.insertTab(index, new_widget, new_title)
+        self.tabs.setCurrentIndex(index)
+        
+        # Delete the old greeting window to prevent memory leaks
+        old_widget.deleteLater()
 
     def open(self):
         file_filter = "JSON File (*.json);;All Files (*.*)"
@@ -99,20 +127,54 @@ class MainWindow(QMainWindow):
             current_workspace.export_current_chart()
 
     def apply_styles(self):
+        # Postman light theme styling
         self.setStyleSheet("""
-            MainWindow {
-                background-color: #F5F7FA;
+            QMainWindow {
+                background-color: #F9F9F9;
             }
 
-            QAction {
-                color: black;
-            }
-
-            QTabWidget::pane {
-                border: 1px solid #CCCCCC;
+            /* --- Menu Bar Styling --- */
+            QMenuBar {
                 background-color: #FFFFFF;
+                border-bottom: 1px solid #EAEAEA;
+                padding: 4px;
+            }
+
+            QMenuBar::item {
+                background: transparent;
+                padding: 6px 12px;
+                color: #212121;
                 border-radius: 4px;
-                top: -1px; 
+                font-size: 13px;
+            }
+
+            QMenuBar::item:selected {
+                background-color: #F2F2F2;
+            }
+
+            QMenu {
+                background-color: #FFFFFF;
+                border: 1px solid #EAEAEA;
+                border-radius: 4px;
+                padding: 4px 0px;
+            }
+
+            QMenu::item {
+                padding: 6px 24px 6px 24px;
+                color: #212121;
+                font-size: 13px;
+            }
+
+            QMenu::item:selected {
+                background-color: #F2F2F2;
+            }
+
+            /* --- Tab Widget Styling --- */
+            QTabWidget::pane {
+                border: 1px solid #EAEAEA;
+                background-color: #FFFFFF;
+                border-radius: 6px;
+                margin-top: 0px;
             }
 
             QTabBar {
@@ -120,25 +182,35 @@ class MainWindow(QMainWindow):
             }
 
             QTabBar::tab {
-                background-color: #E6E9ED;
-                color: #666666;
-                padding: 8px 16px;
-                border-top-left-radius: 8px;
-                border-top-right-radius: 8px;
-                border: 1px solid #CCCCCC;
-                border-bottom: none; 
+                background-color: transparent;
+                color: #6B6B6B;
+                padding: 10px 20px;
+                border: none;
+                border-bottom: 2px solid transparent; 
+                font-size: 13px;
+                font-weight: 500;
             }
 
             QTabBar::tab:hover {
-                background-color: #D6D9DF;
-                color: #333333;
+                color: #212121;
+                background-color: #F2F2F2;
             }
 
             QTabBar::tab:selected {
+                color: #212121;
                 background-color: #FFFFFF;
-                color: #000000;
+                border-bottom: 2px solid #3B82F6; /* Postman signature orange accent */
                 font-weight: bold;
-                margin-bottom: -1px; 
-                padding-bottom: 9px;
+            }
+
+            /* --- Tab Close Button Styling --- */
+            QTabBar::close-button {
+                background: transparent;
+                padding: 2px;
+            }
+
+            QTabBar::close-button:hover {
+                background-color: #EAEAEA;
+                border-radius: 2px;
             }
         """)

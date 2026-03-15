@@ -1,4 +1,5 @@
-from PySide6.QtWidgets import QStackedWidget, QWidget, QPushButton, QVBoxLayout, QFileDialog, QComboBox, QLabel
+from PySide6.QtWidgets import (QStackedWidget, QWidget, QPushButton, QVBoxLayout, 
+                               QFileDialog, QComboBox, QLabel, QGridLayout)
 from PySide6.QtCore import Qt, Signal
 from config.config import BaseConfig, LineConfig
 from widgets.bar_settings_widget import BarSettingsWidget
@@ -22,29 +23,49 @@ class SidePanel(QWidget):
         self.streamer = None
 
         # --- Create Main Layout --- 
-        self.main_layout = QVBoxLayout()
+        self.main_layout = QVBoxLayout(self)
         self.main_layout.setAlignment(Qt.AlignTop)
+        self.main_layout.setContentsMargins(16, 16, 16, 16) # Отступы от краев окна
+        self.main_layout.setSpacing(12) # Фиксированное расстояние между блоками
+
+        # --- 1. Top Section (Упаковываем верхние контролы вместе) ---
+        top_group = QWidget()
+        top_layout = QVBoxLayout(top_group)
+        top_layout.setContentsMargins(0, 0, 0, 0)
+        top_layout.setSpacing(10)
 
         self.upload_button = QPushButton("Upload Data File")
         self.upload_button.setObjectName("uploadButton")
         self.upload_button.clicked.connect(self.select_file)
 
-        # --- Axis Selection UI ---
-        self.x_label = QLabel("X Axis Column:")
+        # Компактная сетка для осей X и Y
+        axis_layout = QGridLayout()
+        axis_layout.setSpacing(8)
+        
+        self.x_label = QLabel("X Axis:")
         self.x_combo = QComboBox()
-        self.y_label = QLabel("Y Axis Column:")
+        self.y_label = QLabel("Y Axis:")
         self.y_combo = QComboBox()
         
-        # Connect changes in comboboxes to the parsing trigger
+        # Размещаем в два столбца (0 и 1) и две строки (0 и 1)
+        axis_layout.addWidget(self.x_label, 0, 0)
+        axis_layout.addWidget(self.x_combo, 0, 1)
+        axis_layout.addWidget(self.y_label, 1, 0)
+        axis_layout.addWidget(self.y_combo, 1, 1)
+
         self.x_combo.currentIndexChanged.connect(self.trigger_parsing)
         self.y_combo.currentIndexChanged.connect(self.trigger_parsing)
 
-        # Create the ComboBox for Chart Type
         self.combo_box = QComboBox()
         self.combo_box.addItem("Line Chart")
         self.combo_box.addItem("Bar Chart")
 
-        # Create the Stacked Widget
+        # Добавляем элементы в верхнюю группу
+        top_layout.addWidget(self.upload_button)
+        top_layout.addLayout(axis_layout)
+        top_layout.addWidget(self.combo_box)
+
+        # --- 2. Middle Section (Настройки) ---
         self.stacked_widget = QStackedWidget()
 
         self.line_settings = LineSettingsWidget()
@@ -56,21 +77,16 @@ class SidePanel(QWidget):
         self.combo_box.currentIndexChanged.connect(self.stacked_widget.setCurrentIndex)
         self.combo_box.currentTextChanged.connect(self.handle_chart_selection)
 
+        # --- 3. Bottom Section (Submit Button) ---
         self.submit_button = QPushButton("Submit")
         self.submit_button.setObjectName("submitButton")
         self.submit_button.clicked.connect(self.get_user_data)
 
-        # Add everything to the main layout
-        self.main_layout.addWidget(self.upload_button)
-        self.main_layout.addWidget(self.x_label)  # New X label
-        self.main_layout.addWidget(self.x_combo)  # New X combo
-        self.main_layout.addWidget(self.y_label)  # New Y label
-        self.main_layout.addWidget(self.y_combo)  # New Y combo
-        self.main_layout.addWidget(self.combo_box)
-        self.main_layout.addWidget(self.stacked_widget)
-        self.main_layout.addWidget(self.submit_button)
+        # --- Assembly ---
+        self.main_layout.addWidget(top_group)
 
-        self.setLayout(self.main_layout)
+        self.main_layout.addWidget(self.stacked_widget, stretch=1) 
+        self.main_layout.addWidget(self.submit_button)
 
         # --- Styles ---
         self.apply_styles()
@@ -217,7 +233,6 @@ class SidePanel(QWidget):
         print(f"Streaming Error: {error_msg}")
 
     def on_streaming_finished(self):
-        # Re-enable UI elements after parsing is complete
         self.upload_button.setEnabled(True)
         self.submit_button.setEnabled(True)
         self.x_combo.setEnabled(True)
@@ -229,59 +244,93 @@ class SidePanel(QWidget):
         self.get_user_data() 
 
     def apply_styles(self):
-        # Keep your existing styles
         self.setStyleSheet("""
             SidePanel {
-                background-color: #F5F7FA;
+                background-color: #FAFAFA;
+                border-left: 1px solid #EAEAEA;
+            }
+
+            QLabel {
+                color: #6B6B6B;
+                font-size: 12px;
+                font-weight: bold;
+                /* Убраны жесткие margin, теперь отступы контролирует Layout */
+                border: none;
             }
 
             QComboBox {
-                color: black;
-                background-color: white;
-            }
-            
-            #uploadButton {
-                padding: 5px 0px;
-                border-radius: 5px;
-                background-color: #4681f4;
-                color: #FFFFFF;
-                border: 1px solid #3A7CBD;
-                font: bold;
-            }
-            
-            #uploadButton:hover {
-                background-color: #3A7CBD;
-            }
-            
-            #uploadButton:pressed {
-                background-color: #2C5F96;
-            }
-            
-            #submitButton {
-                padding: 10px 0px;
-                background-color: #33b249;
-                color: #FFFFFF;
-                border: 1px solid #27AE60;
-                font-weight: bold;
-                font-size: 16px;
-            }
-            
-            #submitButton:hover {
-                background-color: #27AE60;
-            }
-            
-            #submitButton:pressed {
-                background-color: #1E8449;
-            }
-            QLineEdit {
                 background-color: #FFFFFF;
-                color: #333333;
-                border: 1px solid #CCCCCC;
+                border: 1px solid #EAEAEA;
                 border-radius: 4px;
-                padding: 6px;
+                padding: 6px 10px;
+                color: #212121;
+                font-size: 13px;
+                min-height: 20px;
             }
-            
-            QLineEdit:focus {
-                border: 1px solid #4A90E2;
+
+            QComboBox:hover {
+                border: 1px solid #CCCCCC;
+            }
+
+            QComboBox:focus {
+                border: 1px solid #3B82F6;
+            }
+
+            QComboBox::drop-down {
+                border: none;
+                padding-right: 10px;
+            }
+
+            QComboBox QAbstractItemView {
+                background-color: #FFFFFF;
+                border: 1px solid #EAEAEA;
+                selection-background-color: #F0F6FF;
+                selection-color: #212121;
+                outline: none;
+            }
+
+            /* Secondary Action Button */
+            #uploadButton {
+                background-color: #FFFFFF;
+                color: #212121;
+                border: 1px solid #EAEAEA;
+                border-radius: 4px;
+                padding: 8px 0px;
+                font-weight: bold;
+                font-size: 13px;
+            }
+
+            #uploadButton:hover {
+                background-color: #F8FAFC;
+                border: 1px solid #CCCCCC;
+            }
+
+            #uploadButton:pressed {
+                background-color: #E2E8F0;
+            }
+
+            /* Primary Action Button (Ocean Blue) */
+            #submitButton {
+                background-color: #2563EB; 
+                color: #FFFFFF;
+                border: none;
+                border-radius: 4px;
+                padding: 10px 0px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+
+            #submitButton:hover {
+                background-color: #1D4ED8;
+            }
+
+            #submitButton:pressed {
+                background-color: #1E3A8A;
+            }
+
+            QPushButton:disabled, QComboBox:disabled {
+                background-color: #F0F0F0 !important;
+                color: #A0A0A0 !important;
+                border: 1px solid #EAEAEA !important;
             }
         """)
