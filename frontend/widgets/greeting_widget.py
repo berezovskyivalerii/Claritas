@@ -11,9 +11,8 @@ class GreetingWindow(QWidget):
         
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setAlignment(Qt.AlignCenter)
-        self.main_layout.setSpacing(15) # Отступ между кнопками
+        self.main_layout.setSpacing(15)
 
-        # Стилизуем текст приветствия
         self.greeting_text = QLabel("Hello!\nMake your choice!")
         self.greeting_text.setAlignment(Qt.AlignCenter)
         self.greeting_text.setStyleSheet("""
@@ -26,7 +25,6 @@ class GreetingWindow(QWidget):
         self.fs_button = QPushButton("File System")
         self.db_button = QPushButton("Database Connection")
 
-        # Единый стиль для кнопок в стиле Ocean Blue
         button_style = """
             QPushButton {
                 background-color: #2563EB; 
@@ -52,6 +50,5 @@ class GreetingWindow(QWidget):
         self.main_layout.addWidget(self.fs_button)
         self.main_layout.addWidget(self.db_button)
         
-        # Исправленные отступы
         self.fs_button.clicked.connect(self.fs_chosen.emit)
         self.db_button.clicked.connect(self.db_chosen.emit)

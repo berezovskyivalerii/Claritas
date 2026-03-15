@@ -67,12 +67,11 @@ class MainWindow(QMainWindow):
         if index == -1:
             return
 
-        # Instantiate the correct workspace
         if choice == "fs":
             new_widget = ChartWorkspace()
             new_title = "Local CSV Chart"
         elif choice == "db":
-            new_widget = DatabaseWorkspace() # Assuming you created this class
+            new_widget = DatabaseWorkspace() 
             new_title = "Database Chart"
         else:
             return
