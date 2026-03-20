@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt, Signal
 from config.config import BaseConfig, LineConfig
 from widgets.bar_settings_widget import BarSettingsWidget
 from widgets.line_settings_widget import LineSettingsWidget
+from widgets.database_settings_widget import DatabaseSettingsDialog
 from client import  GrpcDataStreamer
 import grpc
 from api import claritas_pb2
@@ -12,7 +13,7 @@ from api import claritas_pb2_grpc
 class SidePanel(QWidget):
     request_chart_draw = Signal(str, object)
 
-    def __init__(self):
+    def __init__(self, source_type):
         super().__init__()
         self.setAttribute(Qt.WA_StyledBackground, True) 
 
@@ -25,20 +26,23 @@ class SidePanel(QWidget):
         # --- Create Main Layout --- 
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setAlignment(Qt.AlignTop)
-        self.main_layout.setContentsMargins(16, 16, 16, 16) # Отступы от краев окна
-        self.main_layout.setSpacing(12) # Фиксированное расстояние между блоками
+        self.main_layout.setContentsMargins(16, 16, 16, 16) 
+        self.main_layout.setSpacing(12)
 
-        # --- 1. Top Section (Упаковываем верхние контролы вместе) ---
+        # --- 1. Top Section ---
         top_group = QWidget()
         top_layout = QVBoxLayout(top_group)
         top_layout.setContentsMargins(0, 0, 0, 0)
         top_layout.setSpacing(10)
 
+        self.database_connect_button = QPushButton("Connect to Database")
+        self.database_connect_button.setObjectName("dbConnButton")
+        self.database_connect_button.clicked.connect(self.connect_settings)
+
         self.upload_button = QPushButton("Upload Data File")
         self.upload_button.setObjectName("uploadButton")
         self.upload_button.clicked.connect(self.select_file)
 
-        # Компактная сетка для осей X и Y
         axis_layout = QGridLayout()
         axis_layout.setSpacing(8)
         
@@ -47,7 +51,6 @@ class SidePanel(QWidget):
         self.y_label = QLabel("Y Axis:")
         self.y_combo = QComboBox()
         
-        # Размещаем в два столбца (0 и 1) и две строки (0 и 1)
         axis_layout.addWidget(self.x_label, 0, 0)
         axis_layout.addWidget(self.x_combo, 0, 1)
         axis_layout.addWidget(self.y_label, 1, 0)
@@ -61,7 +64,11 @@ class SidePanel(QWidget):
         self.combo_box.addItem("Bar Chart")
 
         # Добавляем элементы в верхнюю группу
-        top_layout.addWidget(self.upload_button)
+        if source_type == "database": 
+            top_layout.addWidget(self.database_connect_button)
+        elif source_type == "filesystem":
+            top_layout.addWidget(self.upload_button)
+
         top_layout.addLayout(axis_layout)
         top_layout.addWidget(self.combo_box)
 
@@ -155,6 +162,16 @@ class SidePanel(QWidget):
         self.selected_path, _ = QFileDialog.getOpenFileName(None, "Select Data File", "", dialog_filter)
         if self.selected_path: 
             self.fetch_headers_only(self.selected_path)
+
+    def connect_settings(self):
+        dialog = DatabaseSettingsDialog(self)
+        
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            data = dialog.get_data()
+            print("Connection Settings Received:")
+            print(data)
+        else:
+            print("Action cancelled by user")
 
     # 1. Fetch headers and populate combo boxes
     def fetch_headers_only(self, path):
@@ -300,6 +317,16 @@ class SidePanel(QWidget):
                 font-size: 13px;
             }
 
+            #dbConnButton {
+                background-color: #FFFFFF;
+                color: #212121;
+                border: 1px solid #EAEAEA;
+                border-radius: 4px;
+                padding: 8px 0px;
+                font-weight: bold;
+                font-size: 13px;
+            }
+ 
             #uploadButton:hover {
                 background-color: #F8FAFC;
                 border: 1px solid #CCCCCC;

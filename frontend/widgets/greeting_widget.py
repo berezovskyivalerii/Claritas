@@ -52,3 +52,4 @@ class GreetingWindow(QWidget):
         
         self.fs_button.clicked.connect(self.fs_chosen.emit)
         self.db_button.clicked.connect(self.db_chosen.emit)
+

@@ -8,7 +8,7 @@ class ChartWorkspace(QSplitter):
         super().__init__(Qt.Horizontal)
 
         # 1. Initialize child widgets specifically for this workspace
-        self.sidepanel_widget = SidePanel()
+        self.sidepanel_widget = SidePanel("filesystem")
         self.live_chart_widget = LiveChartWidget()
         
         # 2. Add widgets to the splitter
